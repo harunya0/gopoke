@@ -4,4 +4,6 @@ gopoke [URL] <br>
 返り値の例：
 Response: 200 OK
 Content type: text/html; charset=ISO-8859-1
-Time: 198.7826ms
+Content length: unknown
+Body size: 84396 bytes
+Time: 288.1276ms
