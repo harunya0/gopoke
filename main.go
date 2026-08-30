@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"time"
 )
 
 func main() {
+	start := time.Now()
 	if len(os.Args) < 2 {
 		fmt.Printf("URL寄越しやがれください")
 		return
@@ -18,5 +20,6 @@ func main() {
 		return
 	}
 	defer resp.Body.Close()
-	fmt.Printf("Response: %s\n", resp.Status)
+	elapsed := time.Since(start)
+	fmt.Printf("Response: %s (%v)\n", resp.Status, elapsed)
 }
