@@ -21,5 +21,7 @@ func main() {
 	}
 	defer resp.Body.Close()
 	elapsed := time.Since(start)
-	fmt.Printf("Response: %s (%v)\n", resp.Status, elapsed)
+	fmt.Printf("Response: %s\n", resp.Status)
+	fmt.Printf("Content type: %s\n", resp.Header.Get("Content-Type"))
+	fmt.Printf("Time: %s\n", elapsed)
 }
