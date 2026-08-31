@@ -13,8 +13,7 @@ URLの状態確認やレスポンス時間の計測、ICMP Ping、リダイレ�
 
 ```bash
 # ビルド
-go build -o gopoke .
-
+go build -o gopoke ./cmd/gopoke
 # 実行
 ./gopoke https://example.com
 ```
@@ -51,21 +50,23 @@ Time: 142.35ms
 
 ### 2. JSON形式で出力
 ```bash
-$ gopoke -json https://example.com
+$ gopoke -json https://google.com                                                                                 
 {
   "status": "200 OK",
-  "content_type": "text/html; charset=UTF-8",
-  "content_length": 1256,
-  "body_size": 1256,
-  "elapsed": "142.35ms"
+  "content_type": "text/html; charset=ISO-8859-1",
+  "content_length": -1,
+  "body_size": 84420,
+  "elapsed": "301.4615ms"
 }
 ```
 
 ### 3. リダイレクト追跡
 ```bash
 $ gopoke -tracking http://google.com
+リダイレクトはありませんでした
+$ gopoke -tracking https://x.gd/GoFKp
 Redirect chain:
-1: http://www.google.com/
+1: https://www.google.com/
 Final HTTP status code: 200
 ```
 
