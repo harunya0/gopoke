@@ -5,6 +5,8 @@ import (
 	"flag"
 	"fmt"
 	"time"
+
+	"github.com/harunya0/gopoke"
 )
 
 func main() {
@@ -33,7 +35,7 @@ func main() {
 
 func pokeRun(url string, timeout time.Duration, jsonOutput bool) {
 	start := time.Now()
-	result, err := Poke(url, timeout)
+	result, err := gopoke.Poke(url, timeout)
 	elapsed := time.Since(start)
 	if err != nil {
 		fmt.Printf("error: %v\n", err)
@@ -45,7 +47,7 @@ func pokeRun(url string, timeout time.Duration, jsonOutput bool) {
 	}
 	if jsonOutput {
 		out := struct {
-			PokeResult
+			gopoke.PokeResult
 			Elapsed string `json:"elapsed"`
 		}{
 			PokeResult: result,
@@ -63,12 +65,12 @@ func pokeRun(url string, timeout time.Duration, jsonOutput bool) {
 }
 
 func pingRun(url string) {
-	host, err := ExtractHost(url)
+	host, err := gopoke.ExtractHost(url)
 	if err != nil {
 		fmt.Printf("error: %v\n", err)
 		return
 	}
-	result, err := Ping(host)
+	result, err := gopoke.Ping(host)
 	if err != nil {
 		fmt.Printf("error: %v\n", err)
 		return
@@ -77,7 +79,7 @@ func pingRun(url string) {
 }
 
 func trackRun(url string, timeout time.Duration, maxRedirects int) {
-	result, err := Track(url, timeout, maxRedirects)
+	result, err := gopoke.Track(url, timeout, maxRedirects)
 	if err != nil {
 		fmt.Printf("error: %v\n", err)
 		return
