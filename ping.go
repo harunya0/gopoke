@@ -39,7 +39,7 @@ type PingResult struct {
 	Type  uint8
 }
 
-func extractHost(rawURL string) (string, error) {
+func ExtractHost(rawURL string) (string, error) {
 	if !strings.Contains(rawURL, "://") {
 		return rawURL, nil
 	}
@@ -50,7 +50,7 @@ func extractHost(rawURL string) (string, error) {
 	return u.Hostname(), nil
 }
 
-func ping(host string) (PingResult, error) {
+func Ping(host string) (PingResult, error) {
 	var result PingResult
 	conn, err := net.Dial("ip4:icmp", host)
 	if err != nil {

@@ -1,15 +1,18 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
-	"io"
-	"net/http"
 	"time"
 )
 
 func main() {
-	pingflag := flag.Bool("ping", false, "ping実行")
+	pingFlag := flag.Bool("ping", false, "ping実行")
+	trackingFlag := flag.Bool("tracking", false, "リダイレクト追跡実行")
+	timeoutFlag := flag.Int("timeout", 10, "タイムアウト時間")
+	maxRedirectsFlag := flag.Int("max-redirects", 10, "リダイレクト追跡回数の上限(0で無制限)")
+	jsonFlag := flag.Bool("json", false, "JSON形式で出力")
 	flag.Parse()
 
 	args := flag.Args()
@@ -19,16 +22,18 @@ func main() {
 	}
 	url := args[0]
 
-	if *pingflag {
+	if *pingFlag {
 		pingRun(url)
+	} else if *trackingFlag {
+		trackRun(url, time.Duration(*timeoutFlag)*time.Second, *maxRedirectsFlag)
 	} else {
-		pokeRun(url)
+		pokeRun(url, time.Duration(*timeoutFlag)*time.Second, *jsonFlag)
 	}
 }
 
-func pokeRun(url string) {
+func pokeRun(url string, timeout time.Duration, jsonOutput bool) {
 	start := time.Now()
-	result, err := poke(url)
+	result, err := Poke(url, timeout)
 	elapsed := time.Since(start)
 	if err != nil {
 		fmt.Printf("error: %v\n", err)
@@ -38,6 +43,18 @@ func pokeRun(url string) {
 	if result.ContentLength >= 0 {
 		CLresponse = fmt.Sprintf("%d bytes", result.ContentLength)
 	}
+	if jsonOutput {
+		out := struct {
+			PokeResult
+			Elapsed string `json:"elapsed"`
+		}{
+			PokeResult: result,
+			Elapsed:    elapsed.String(),
+		}
+		b, _ := json.MarshalIndent(out, "", "  ")
+		fmt.Println(string(b))
+		return
+	}
 	fmt.Printf("Response: %s\n", result.Status)
 	fmt.Printf("Content type: %s\n", result.ContentType)
 	fmt.Printf("Content length: %s\n", CLresponse)
@@ -46,12 +63,12 @@ func pokeRun(url string) {
 }
 
 func pingRun(url string) {
-	host, err := extractHost(url)
+	host, err := ExtractHost(url)
 	if err != nil {
 		fmt.Printf("error: %v\n", err)
 		return
 	}
-	result, err := ping(host)
+	result, err := Ping(host)
 	if err != nil {
 		fmt.Printf("error: %v\n", err)
 		return
@@ -59,29 +76,19 @@ func pingRun(url string) {
 	fmt.Printf("Ping result: %d bytes, Type: %d\n", result.Bytes, result.Type)
 }
 
-type PokeResult struct {
-	Status        string
-	ContentType   string
-	ContentLength int64
-	BodySize      int64
-}
-
-func poke(url string) (PokeResult, error) {
-	resp, err := http.Get(url)
+func trackRun(url string, timeout time.Duration, maxRedirects int) {
+	result, err := Track(url, timeout, maxRedirects)
 	if err != nil {
-		return PokeResult{}, fmt.Errorf("HTTPリクエストに失敗しました: %w", err)
+		fmt.Printf("error: %v\n", err)
+		return
 	}
-	defer resp.Body.Close()
-
-	bodySize, err := io.Copy(io.Discard, resp.Body)
-	if err != nil {
-		return PokeResult{}, fmt.Errorf("レスポンスボディの読み込みに失敗しました: %w", err)
+	if len(result.Chain) == 0 {
+		fmt.Println("リダイレクトはありませんでした")
+		return
 	}
-
-	return PokeResult{
-		Status:        resp.Status,
-		ContentType:   resp.Header.Get("Content-Type"),
-		ContentLength: resp.ContentLength,
-		BodySize:      bodySize,
-	}, nil
+	fmt.Println("Redirect chain:")
+	for i, u := range result.Chain {
+		fmt.Printf("%d: %s\n", i+1, u)
+	}
+	fmt.Printf("Final HTTP status code: %d\n", result.FinalCode)
 }

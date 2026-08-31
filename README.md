@@ -1,9 +1,76 @@
-このプログラムはgo言語の練習として書いています<br> 
-gopoke [URL]<br>
-でURLの状態（200 OKなど）とレスポンス時間を返す簡素なプログラムです<br>
-返り値の例：<br>
-Response: 200 OK<br>
-Content type: text/html; charset=ISO-8859-1<br>
-Content length: unknown<br>
-Body size: 84396 bytes<br>
-Time: 288.1276ms<br>
+# gopoke
+
+URLの状態確認やレスポンス時間の計測、ICMP Ping、リダイレクト追跡ができるシンプルなCLIツールです。
+
+## 主な機能
+
+- **HTTPステータス・レスポンス計測**: 指定URLへのGETリクエスト、Content-Type、データサイズ、応答時間の確認
+- **JSON出力**: 出力結果をパースしやすいJSON形式で取得
+- **リダイレクト追跡**: リダイレクトの遷移チェーンと最終ステータスコードの表示
+- **Ping**: ICMP Echo Requestによる疎通確認（※要管理者/root権限）
+
+## ビルド / 実行方法
+
+```bash
+# ビルド
+go build -o gopoke .
+
+# 実行
+./gopoke https://example.com
+```
+
+## 使い方 (Usage)
+
+```bash
+gopoke [オプション] <URLまたはホスト>
+```
+
+### オプション一覧
+
+| オプション | デフォルト | 説明 |
+| :--- | :--- | :--- |
+| `-timeout <秒>` | `10` | リクエストのタイムアウト時間（秒） |
+| `-json` | `false` | 結果をJSON形式で出力 |
+| `-tracking` | `false` | リダイレクトの遷移を追跡 |
+| `-max-redirects <回数>` | `10` | リダイレクト追跡回数の上限（`0`で無制限） |
+| `-ping` | `false` | ICMP Pingを実行（※要管理者権限） |
+
+---
+
+## 実行例
+
+### 1. 通常の確認 (Poke)
+```bash
+$ gopoke https://example.com
+Response: 200 OK
+Content type: text/html; charset=UTF-8
+Content length: 1256 bytes
+Body size: 1256 bytes
+Time: 142.35ms
+```
+
+### 2. JSON形式で出力
+```bash
+$ gopoke -json https://example.com
+{
+  "status": "200 OK",
+  "content_type": "text/html; charset=UTF-8",
+  "content_length": 1256,
+  "body_size": 1256,
+  "elapsed": "142.35ms"
+}
+```
+
+### 3. リダイレクト追跡
+```bash
+$ gopoke -tracking http://google.com
+Redirect chain:
+1: http://www.google.com/
+Final HTTP status code: 200
+```
+
+### 4. Ping送信
+```bash
+$ gopoke -ping example.com
+Ping result: 8 bytes, Type: 0
+```
